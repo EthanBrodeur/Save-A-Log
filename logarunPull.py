@@ -24,7 +24,7 @@ currentDay = datetime.today()
 
 #To add:loop through all the days you want
 
-testDate = "/2017/06/17"
+testDate = "/2017/06/21"
 
 #urlQuery = baseURL + username + dateFormat(currentDay)
 urlQuery = baseURL + username + testDate
@@ -35,23 +35,43 @@ print "We will query: " + urlQuery
 #Grab what we need
 page = urllib2.urlopen(urlQuery)
 soup = BeautifulSoup(page, 'html.parser')
+
 logTitle = soup.find('tr', attrs={'class': 'editTblDayTitle'}).get_text()
 logNote = soup.find('p', attrs={'id': 'ctl00_Content_c_note_c_note'}).get_text()
 
+bikeDistances = []
+bikeTypes = []
+bikePaces = []
+bikeTimes = []
+rawHTMLbikeDistances = []
+rawHTMLbikeTypes = []
+rawHTMLbikePaces = []
+rawHTMLbikeTimes = []
+#switch the below to go through activitiesview
+#workoutBox = soup.find('div', attrs={'class': 'applications'})
+bikeBoxes = soup.findAll(attrs={'class': re.compile("app Bike.*")})
+if bikeBoxes:
+	for item in bikeBoxes: #for each bike that day
+		rawHTMLbikeDistances += item.findAll(attrs={'id': re.compile("ctl00_c_value")})
+		rawHTMLbikeTypes += item.findAll(attrs={'id': re.compile("ctl01_c_value")})
+		rawHTMLbikeTimes += item.findAll(attrs={'id': re.compile("ctl02_c_value")})
+		rawHTMLbikePaces += item.findAll(attrs={'id': re.compile("ctl03_c_value")})
+	#Seems like a dumb way to grab this all but
+	for span in rawHTMLbikeDistances:
+		bikeDistances.append(float(span.text))
+	for i in rawHTMLbikeTypes:
+		#cleanedText = i.text.replace("(s)", "s")
+		bikeTypes.append(str(i.text.replace("(s)", "s")))
+	for i in rawHTMLbikeTimes:
+		bikeTimes.append(str(i.text))#Probably change this cast later
+	for i in rawHTMLbikePaces:
+		bikePaces.append(str(i.text))
 
-bikeBox = soup.find('div', attrs={'class': 'app Bike appColor'})
-dubBikeBox = soup.find('div', attrs={'class': 'app Bike'})
+dailyBike = zip(bikeDistances,bikeTypes,bikeTimes, bikePaces)
+print dailyBike
 
 swimBox = soup.find('div', attrs={'class': 'app Swim'})
 
-if bikeBox:
-	bikeDistanceFinder = bikeBox.findAll('span', id=re.compile("ctl00_c_value"))
-	bikeDistance = float(bikeDistanceFinder[0].get_text())
-	print bikeDistance
-if dubBikeBox:
-	bikeDistanceFinder = dubBikeBox.findAll('span', id=re.compile("ctl00_c_value"))
-	dubBikeDistance = float(bikeDistanceFinder[0].get_text())
-	print dubBikeDistance
 ###Append current date's data to Pandas###
 
 
@@ -65,3 +85,39 @@ def dateFormat(date):
 def subtractDay(date):
 	retDate = date - timedelta(days=1)
 	return retDate
+
+#pull an activity from a day
+#activityString: "Run", "Bike", "Elliptical", etc.
+def getActivity(activityString):
+	if type(activityString) != str:
+		print "error! Didn't pass a string to getActivity"
+		sys.exit()
+
+
+
+	regExString = "app %s.*" % activityString
+	activityBoxes = soup.findAll(attrs={'class': re.compile(regExString)})
+	if activityBoxes:
+		activityDistances = []
+		activityTypes = []
+		activityPaces = []
+		activityTimes = []
+		rawHTMLActivityDistances = []
+		rawHTMLActivityTypes = []
+		rawHTMLActivityPaces = []
+		rawHTMLActivityTimes = []
+	for item in bikeBoxes: #for each bike that day
+		rawHTMLbikeDistances += item.findAll(attrs={'id': re.compile("ctl00_c_value")})
+		rawHTMLbikeTypes += item.findAll(attrs={'id': re.compile("ctl01_c_value")})
+		rawHTMLbikeTimes += item.findAll(attrs={'id': re.compile("ctl02_c_value")})
+		rawHTMLbikePaces += item.findAll(attrs={'id': re.compile("ctl03_c_value")})
+	#Seems like a dumb way to grab this all but
+	for span in rawHTMLbikeDistances:
+		bikeDistances.append(float(span.text))
+	for i in rawHTMLbikeTypes:
+		#cleanedText = i.text.replace("(s)", "s")
+		bikeTypes.append(str(i.text.replace("(s)", "s")))
+	for i in rawHTMLbikeTimes:
+		bikeTimes.append(str(i.text))#Probably change this cast later
+	for i in rawHTMLbikePaces:
+		bikePaces.append(str(i.text))
