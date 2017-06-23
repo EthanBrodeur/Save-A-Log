@@ -38,7 +38,7 @@ soup = BeautifulSoup(page, 'html.parser')
 
 logTitle = soup.find('tr', attrs={'class': 'editTblDayTitle'}).get_text()
 logNote = soup.find('p', attrs={'id': 'ctl00_Content_c_note_c_note'}).get_text()
-
+print type(logTitle)
 bikeDistances = []
 bikeTypes = []
 bikePaces = []
@@ -61,11 +61,11 @@ if bikeBoxes:
 		bikeDistances.append(float(span.text))
 	for i in rawHTMLbikeTypes:
 		#cleanedText = i.text.replace("(s)", "s")
-		bikeTypes.append(str(i.text.replace("(s)", "s")))
+		bikeTypes.append(unicode(i.text.replace("(s)", "s")))
 	for i in rawHTMLbikeTimes:
-		bikeTimes.append(str(i.text))#Probably change this cast later
+		bikeTimes.append(unicode(i.text))#Probably change this cast later
 	for i in rawHTMLbikePaces:
-		bikePaces.append(str(i.text))
+		bikePaces.append(unicode(i.text))
 
 dailyBike = zip(bikeDistances,bikeTypes,bikeTimes, bikePaces)
 print dailyBike
@@ -78,8 +78,8 @@ swimBox = soup.find('div', attrs={'class': 'app Swim'})
 ###utility functions###
 #Converts a Date Object to Logarun URL Format
 def dateFormat(date):
-	retURL = "/%s/%s/%s" % (date.year, date.month, date.day)
-	return retURL
+	#retURL = "/%s/%s/%s" % (date.year, date.month, date.day) #not clean
+	return date.strftime("/%Y/%m/%d") # much cleaner
 
 #move backwards current day
 def subtractDay(date):
@@ -89,11 +89,11 @@ def subtractDay(date):
 #pull an activity from a day
 #activityString: "Run", "Bike", "Elliptical", etc.
 def getActivity(activityString):
-	if type(activityString) != str:
+	if type(activityString) != unicode:
 		print "error! Didn't pass a string to getActivity"
+		print 'you passed:'  
+		print(type(activityString))
 		sys.exit()
-
-
 
 	regExString = "app %s.*" % activityString
 	activityBoxes = soup.findAll(attrs={'class': re.compile(regExString)})
@@ -106,18 +106,25 @@ def getActivity(activityString):
 		rawHTMLActivityTypes = []
 		rawHTMLActivityPaces = []
 		rawHTMLActivityTimes = []
-	for item in bikeBoxes: #for each bike that day
-		rawHTMLbikeDistances += item.findAll(attrs={'id': re.compile("ctl00_c_value")})
-		rawHTMLbikeTypes += item.findAll(attrs={'id': re.compile("ctl01_c_value")})
-		rawHTMLbikeTimes += item.findAll(attrs={'id': re.compile("ctl02_c_value")})
-		rawHTMLbikePaces += item.findAll(attrs={'id': re.compile("ctl03_c_value")})
-	#Seems like a dumb way to grab this all but
-	for span in rawHTMLbikeDistances:
-		bikeDistances.append(float(span.text))
-	for i in rawHTMLbikeTypes:
-		#cleanedText = i.text.replace("(s)", "s")
-		bikeTypes.append(str(i.text.replace("(s)", "s")))
-	for i in rawHTMLbikeTimes:
-		bikeTimes.append(str(i.text))#Probably change this cast later
-	for i in rawHTMLbikePaces:
-		bikePaces.append(str(i.text))
+		for item in activityBoxes: #for each bike that day
+			rawHTMLActivityTypes += (item.findAll(attrs={'id': re.compile("ctl01_c_value")}))
+			rawHTMLActivityDistances += (item.findAll(attrs={'id': re.compile("ctl00_c_value")}))
+			rawHTMLActivityTimes += (item.findAll(attrs={'id': re.compile("ctl02_c_value")}))
+			rawHTMLActivityPaces += (item.findAll(attrs={'id': re.compile("ctl03_c_value")}))
+		#Seems like a dumb way to grab this all but
+		for span in rawHTMLActivityDistances:
+			activityDistances.append(float(span.text))
+		for i in rawHTMLActivityTypes:
+			#cleanedText = i.text.replace("(s)", "s")
+			activityTypes.append(unicode(i.text.replace("(s)", "s")))
+		for i in rawHTMLActivityTimes:
+			activityTimes.append(unicode(i.text))#Probably change this cast later
+		for i in rawHTMLActivityPaces:
+			activityPaces.append(unicode(i.text))
+		
+		dailyActivity = zip(activityDistances, activityTypes, activityTimes, activityPaces)
+		return dailyActivity
+	else:
+		return 0
+
+print getActivity(unicode("Bike"))
