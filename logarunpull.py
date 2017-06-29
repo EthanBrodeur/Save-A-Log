@@ -63,7 +63,7 @@ def subtract_day(date):
 
 
 def get_activity(activityString, soup):
-	"""pull an activity from a day.
+	"""pull an activity from a day.	
 	activityString: "Run", "Bike", "Elliptical", etc.
 	"""
 	if type(activityString) != unicode:
