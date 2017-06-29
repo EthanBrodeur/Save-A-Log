@@ -45,27 +45,27 @@ def main():
 
 	# Append today's data to df
 
-
-'''Utility Functions'''
-# Converts a Date Object to Logarun URL Format
+"""Utility Functions"""
 
 
 def date_format(date):
+	"""Converts a Date Object to Logarun URL Format"""
+
 	# retURL = "/%s/%s/%s" % (date.year, date.month, date.day) # not clean
 	return date.strftime("/%Y/%m/%d")  # much cleaner
 
-# move backwards current day
-
 
 def subtract_day(date):
+	"""Converts a Date Object to Logarun URL Format"""
+
 	retDate = date - timedelta(days=1)
 	return retDate
 
-# pull an activity from a day
-# activityString: "Run", "Bike", "Elliptical", etc.
-
 
 def get_activity(activityString, soup):
+	"""pull an activity from a day.
+	activityString: "Run", "Bike", "Elliptical", etc.
+	"""
 	if type(activityString) != unicode:
 		print("error! Didn't pass a string to get_activity")
 		print('you passed:')
