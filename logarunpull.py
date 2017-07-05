@@ -66,7 +66,7 @@ def get_activity(activityString, soup):
 	"""pull an activity from a day.	
 	activityString: "Run", "Bike", "Elliptical", etc.
 	"""
-	if type(activityString) != unicode:
+	if not isinstance(activityString, basestring):
 		print("error! Didn't pass a string to get_activity")
 		print('you passed:')
 		print(type(activityString))
