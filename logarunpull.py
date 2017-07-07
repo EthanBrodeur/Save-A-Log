@@ -9,7 +9,9 @@ import urllib2
 from bs4 import BeautifulSoup
 import pandas as pd
 import re
+import numpy as np
 
+currentDay = datetime.today()
 
 def main():
 	# Import username from command line
@@ -24,7 +26,14 @@ def main():
 	# http://www.logarun.com/calendars/<username>/<year>/<month>/<day>
 	# For example: http://www.logarun.com/calendars/edbrodeur/2017/06/18
 	baseURL = "http://www.logarun.com/calendars/"
-	currentDay = datetime.today()
+
+	#TODO: Request number of days back to go from user, set that up as a date range in pandas, set that date range as the dataframe index
+	numDaysBack = 100
+	index = pd.date_range(currentDay - timedelta(days=numDaysBack), periods=numDaysBack, freq='D')
+	
+	httpeaders = "activityName", "activityDistances", "activityTypes", "activityTimes", "activityPaces"
+	#df = pd.DataFrame(index=index, columns=headers)
+	#print df.head()
 
 	# To add:loop through all the days you want
 
@@ -83,6 +92,7 @@ def get_activity(activityString, soup):
 		rawHTMLActivityTypes = []
 		rawHTMLActivityPaces = []
 		rawHTMLActivityTimes = []
+		indexDate = []
 		for item in activityBoxes:  # for each bike that day
 			rawHTMLActivityTypes += (item.findAll(attrs={'id': re.compile("ctl01_c_value")}))
 			rawHTMLActivityDistances += (item.findAll(attrs={'id': re.compile("ctl00_c_value")}))
@@ -98,12 +108,20 @@ def get_activity(activityString, soup):
 			activityTimes.append(unicode(i.text))  # Probably change this cast later
 		for i in rawHTMLActivityPaces:
 			activityPaces.append(unicode(i.text))
+		indexDate.append(currentDay)
+		df = pd.DataFrame({
+			'activity_distance' : activityDistances,
+			'activityTypes' : activityTypes,
+			'activityTimes' : activityTimes,
+			'activityPaces' : activityPaces},index=indexDate)
+		print df.head()
+		return df
 
-		dailyActivity = zip(activityDistances, activityTypes, activityTimes, activityPaces)
-		return dailyActivity
 	else:
 		return 0
 
-
+	
 if __name__ == "__main__":
 	main()
+
+
