@@ -1,24 +1,30 @@
 # -*- coding: utf-8 -*-
 
 # Logarun Data Extraction script
+import argparse
 import csv
-import sys
-import time
 from datetime import datetime, timedelta
-import urllib2
-from bs4 import BeautifulSoup
-import pandas as pd
 import re
+import sys
+
+from bs4 import BeautifulSoup
 import numpy as np
+import pandas as pd
+import urllib2
 
 
 def main():
+	parser = argparse.ArgumentParser(description="Query logarun.com for information about a user's training history.")
+	parser.add_argument('username', metavar='u', help='Username to query')
+	parser.add_argument('daysBack', metavar='db', help='Number of days to go back, from today', default=1, type=int)
+	args=parser.parse_args()
+
 	# Import username from command line
-	if len(sys.argv) == 1:
+	if args.username == "":
 		print("Terminating. You need to supply a username.")
 		sys.exit()
-	username = sys.argv[1]
-	print("username = " + username)
+	print("username = " + args.username)
+	print('days back = %s', args.daysBack)
 	current_day = datetime.today()
 
 
@@ -29,15 +35,15 @@ def main():
 	base_URL = "http://www.logarun.com/calendars/"
 
 	#TODO: Request number of days back to go from user, set that up as a date range in pandas, set that date range as the dataframe index
-	num_days_back = 50
-	index = pd.date_range(current_day - timedelta(days=num_days_back), periods=num_days_back, freq='D')
+	#args.daysBack = 50
+	index = pd.date_range(current_day - timedelta(days=args.daysBack), periods=args.daysBack, freq='D')
 	
 	headers =["Date", "Log Title", "Log Note", "Activity", "Atcivity Distance", "Activity Type", "Activity Time", "Activity Pace"]
 	df = pd.DataFrame(columns=headers)
 
-	while num_days_back >= 0:
+	while args.daysBack >= 0:
 
-		url_query = base_URL + username + date_format(current_day)
+		url_query = base_URL + args.username + date_format(current_day)
 		print("We will query: " + url_query)
 
 		# Paging logarun.com... this is what takes awhile
@@ -47,24 +53,28 @@ def main():
 		try:
 			df.append(get_activity(unicode("Bike"), soup, current_day))
 		except TypeError:
-			print("bike didn't happen that day")
+			pass
+			#print("bike didn't happen that day")
 
 		try:
 			df.append(get_activity(unicode("Run"), soup, current_day))
 		except TypeError:
-			print("run didn't happen that day")
+			pass
+			#print("run didn't happen that day")
 
 		try:
 			df.append(get_activity(unicode("Swim"), soup, current_day))
 		except TypeError:
-			print("swim didn't happen that day")
+			#print("swim didn't happen that day")
+			pass
 
 		try:
 			df.append(get_activity(unicode("Elliptical"), soup, current_day))
 		except TypeError:
-			print("elliptical didn't happen that day")
+			pass
+			#print("elliptical didn't happen that day")
 
-		num_days_back -= 1
+		args.daysBack -= 1
 		current_day = subtract_day(current_day)
 
 	print(df.describe())
@@ -128,6 +138,7 @@ def get_activity(activity_string, soup, date):
 		for i in raw_HTML_activity_paces:
 			activity_paces.append(unicode(i.text))
 		index_date.append(date)
+		#TODO: MOVE UP
 		df = pd.DataFrame({
 			'Log Title' : log_title,
 			'Log Note' : log_note,
