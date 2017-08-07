@@ -38,7 +38,7 @@ def main():
 	#args.daysBack = 50
 	index = pd.date_range(current_day - timedelta(days=args.daysBack), periods=args.daysBack, freq='D')
 	
-	headers =["Date", "Log Title", "Log Note", "Activity", "Atcivity Distance", "Activity Type", "Activity Time", "Activity Pace"]
+	headers =["Date", "Log Title", "Log Note", "Activity", "Activity Distance", "Activity Type", "Activity Time", "Activity Pace"]
 	df = pd.DataFrame(columns=headers)
 
 	while args.daysBack >= 0:
@@ -57,7 +57,7 @@ def main():
 			#print("bike didn't happen that day")
 
 		try:
-			df.append(get_activity(unicode("Run"), soup, current_day))
+			df = df.append(get_activity(unicode("Run"), soup, current_day))
 		except TypeError:
 			pass
 			#print("run didn't happen that day")
@@ -80,7 +80,7 @@ def main():
 	print(df.describe())
 	print(df.head())
 	print(df)
-	df.to_csv("myLog")
+	df.to_csv("myLog.csv")
 
 """Utility Functions"""
 def date_format(date):
@@ -132,22 +132,23 @@ def get_activity(activity_string, soup, date):
 			activity_distances.append(float(span.text))
 		for i in raw_HTML_activity_types:
 			# cleanedText = i.text.replace("(s)", "s")
-			activity_types.append(unicode(i.text.replace("(s)", "s")))
+			activity_types.append(i.text.replace("(s)", "s"))
 		for i in raw_HTML_activity_times:
-			activity_times.append(unicode(i.text))  # Probably change this cast later
+			activity_times.append(i.text)  # Probably change this cast later
 		for i in raw_HTML_activity_paces:
-			activity_paces.append(unicode(i.text))
+			activity_paces.append(i.text)
 		index_date.append(date)
 		#TODO: MOVE UP
 		df = pd.DataFrame({
+			'Date' : date_format(date),
 			'Log Title' : log_title,
 			'Log Note' : log_note,
-			'Acivity': activity_string,
+			'Activity': activity_string,
 			'Activity Distance' : activity_distances,
 			'Activity Type' : activity_types,
-			'Activitiy Time' : activity_times,
-			'Activity Pace' : activity_paces}, index=index_date) #ValueError: could not broadcast input array from shape (2) into shape (1)
-
+			'Activity Time' : activity_times,
+			'Activity Pace' : activity_paces}) #ValueError: could not broadcast input array from shape (2) into shape (1)
+		# print (df)
 		return df
 
 	else:
