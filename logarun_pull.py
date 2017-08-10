@@ -34,11 +34,10 @@ def main():
 	# For example: http://www.logarun.com/calendars/edbrodeur/2017/06/18
 	base_URL = "http://www.logarun.com/calendars/"
 
-	#TODO: Request number of days back to go from user, set that up as a date range in pandas, set that date range as the dataframe index
-	#args.daysBack = 50
+	# args.daysBack = 50
 	index = pd.date_range(current_day - timedelta(days=args.daysBack), periods=args.daysBack, freq='D')
 	
-	headers =["Date", "Log Title", "Log Note", "Activity", "Activity Distance", "Activity Type", "Activity Time", "Activity Pace"]
+	headers =["Date", "Log Title", "Log Note", "Activity", "Activity Distance", "Activity Type", "Activity Time", "Activity Pace", "Comments"]
 	df = pd.DataFrame(columns=headers)
 
 	while args.daysBack >= 0:
@@ -47,14 +46,18 @@ def main():
 		print("We will query: " + url_query)
 
 		# Paging logarun.com... this is what takes awhile
-		page = urllib2.urlopen(url_query)
+		try:
+			page = urllib2.urlopen(url_query)
+		except URLError:
+			print('error was ' + URLError)
+
 		soup = BeautifulSoup(page, 'html.parser')
 
 		try:
 			df.append(get_activity(unicode("Bike"), soup, current_day))
 		except TypeError:
 			pass
-			#print("bike didn't happen that day")
+			# print("bike didn't happen that day")
 
 		try:
 			df = df.append(get_activity(unicode("Run"), soup, current_day))
@@ -73,14 +76,14 @@ def main():
 		except TypeError:
 			pass
 			#print("elliptical didn't happen that day")
+		
+		df.append(grab_comments(soup, current_day))
+		
 
 		args.daysBack -= 1
 		current_day = subtract_day(current_day)
 
-	print(df.describe())
-	print(df.head())
-	print(df)
-	df.to_csv("myLog.csv")
+	df.to_csv("myLog.csv", index = False)
 
 """Utility Functions"""
 def date_format(date):
@@ -96,6 +99,25 @@ def subtract_day(date):
 	retDate = date - timedelta(days=1)
 	return retDate
 
+def grab_comments(soup, date):
+	comments = soup.find('div', attrs={'class': 'app comments'})
+	list_of_comments = []
+	dates = []
+	for line in comments.findAll('li'):
+		# print(line)
+		author = line.find('a').text
+		# print(author)
+		comment = line.find_all('p')[-1].text
+		# print(comment)
+		full_comment = author + ': ' + comment
+		# print(full_comment)
+		list_of_comments.append(full_comment)
+		dates.append(date_format(date))
+	df = pd.DataFrame({
+		'Date': dates,
+		'Comments': list_of_comments
+		})
+	return df
 
 def get_activity(activity_string, soup, date):
 	"""pull an activity from a day.	
@@ -134,7 +156,7 @@ def get_activity(activity_string, soup, date):
 			# cleanedText = i.text.replace("(s)", "s")
 			activity_types.append(i.text.replace("(s)", "s"))
 		for i in raw_HTML_activity_times:
-			activity_times.append(i.text)  # Probably change this cast later
+			activity_times.append(i.text) 
 		for i in raw_HTML_activity_paces:
 			activity_paces.append(i.text)
 		index_date.append(date)
@@ -147,7 +169,7 @@ def get_activity(activity_string, soup, date):
 			'Activity Distance' : activity_distances,
 			'Activity Type' : activity_types,
 			'Activity Time' : activity_times,
-			'Activity Pace' : activity_paces}) #ValueError: could not broadcast input array from shape (2) into shape (1)
+			'Activity Pace' : activity_paces}) 
 		# print (df)
 		return df
 
