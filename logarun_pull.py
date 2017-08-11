@@ -77,8 +77,8 @@ def main():
 			pass
 			#print("elliptical didn't happen that day")
 		
-		df.append(grab_comments(soup, current_day))
-		
+		# df.append(grab_comments(soup, current_day))
+		df = pd.concat([df, grab_comments(soup, current_day)], axis = 0, ignore_index = True)
 
 		args.daysBack -= 1
 		current_day = subtract_day(current_day)
@@ -104,15 +104,12 @@ def grab_comments(soup, date):
 	list_of_comments = []
 	dates = []
 	for line in comments.findAll('li'):
-		# print(line)
 		author = line.find('a').text
-		# print(author)
 		comment = line.find_all('p')[-1].text
-		# print(comment)
 		full_comment = author + ': ' + comment
-		# print(full_comment)
 		list_of_comments.append(full_comment)
 		dates.append(date_format(date))
+
 	df = pd.DataFrame({
 		'Date': dates,
 		'Comments': list_of_comments
