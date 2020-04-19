@@ -10,7 +10,12 @@ import sys
 from bs4 import BeautifulSoup
 import numpy as np
 import pandas as pd
-import urllib2
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
 
 
 def main():
@@ -47,32 +52,32 @@ def main():
 
 		# Paging logarun.com... this is what takes awhile
 		try:
-			page = urllib2.urlopen(url_query)
+			page = urlopen(url_query)
 		except URLError:
 			print('error was ' + URLError)
 
 		soup = BeautifulSoup(page, 'html.parser')
 
 		try:
-			df.append(get_activity(unicode("Bike"), soup, current_day))
+			df.append(get_activity(str("Bike"), soup, current_day))
 		except TypeError:
 			pass
 			# print("bike didn't happen that day")
 
 		try:
-			df = df.append(get_activity(unicode("Run"), soup, current_day))
+			df = df.append(get_activity(str("Run"), soup, current_day))
 		except TypeError:
 			pass
 			#print("run didn't happen that day")
 
 		try:
-			df.append(get_activity(unicode("Swim"), soup, current_day))
+			df.append(get_activity(str("Swim"), soup, current_day))
 		except TypeError:
 			#print("swim didn't happen that day")
 			pass
 
 		try:
-			df.append(get_activity(unicode("Elliptical"), soup, current_day))
+			df.append(get_activity(str("Elliptical"), soup, current_day))
 		except TypeError:
 			pass
 			#print("elliptical didn't happen that day")
@@ -120,7 +125,7 @@ def get_activity(activity_string, soup, date):
 	"""pull an activity from a day.	
 	activity_string: "Run", "Bike", "Elliptical", etc.
 	"""
-	if not isinstance(activity_string, basestring):
+	if not isinstance(activity_string, str):
 		print("error! Didn't pass a string to get_activity")
 		print('you passed:')
 		print(type(activity_string))
